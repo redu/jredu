@@ -3,6 +3,7 @@ package br.com.developer.redu.http;
 import br.com.developer.redu.models.*;
 import org.scribe.model.*;
 import org.scribe.oauth.OAuthService;
+import org.scribe.builder.ServiceBuilder;
 
 import java.util.Map;
 import com.google.gson.Gson;
@@ -31,7 +32,7 @@ public class ScribeHttpClient extends HttpClient {
         this.accesToken = this.service.getAccessToken(null, new Verifier(pin));
     }
     private void initOauth(){
-        this.service = new ServiceBuilderTemp().provider(ReduOauth2.class)
+        this.service = new ServiceBuilder().provider(ReduOauth2.class)
                 .apiKey(this.consumerKey).apiSecret(this.consumerSecret).callback("").build();
 
     }

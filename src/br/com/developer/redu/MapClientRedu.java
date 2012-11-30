@@ -4,35 +4,43 @@ import com.google.gson.internal.StringMap;
 import com.google.gson.reflect.TypeToken;
 
 import java.util.List;
+import java.lang.reflect.Type;
+
 
 /**
- * Created with IntelliJ IDEA.
- * User: igor
- * Date: 9/4/12
- * Time: 9:58 AM
- * To change this template use File | Settings | File Templates.
+ * @author igor
+ * 
+ * Implementação concreta alternativa para o ReduClient, nessa classe todos os recursos são
+ * representados pela classe generica StringMap que é basicamente uma accessor para jsons
  */
-
 public class MapClientRedu extends ReduClient<StringMap, StringMap, StringMap,StringMap, StringMap,
-        StringMap, StringMap> {
+        StringMap, StringMap, StringMap, StringMap> {
     public MapClientRedu(String consumerKey, String consumerSecret, String pin) {
         super(consumerKey, consumerSecret, pin);
     }
 
     @Override
     protected void initTypes() {
+    	Type stringMapListType = new TypeToken<List<StringMap>>(){}.getType();
+    	
         super.userClass = StringMap.class;
-        super.userList = new TypeToken<List<StringMap>>(){}.getType();
+        super.userList = stringMapListType;
         super.subjectClass =StringMap.class;
-        super.subjectList = new TypeToken<List<StringMap>>(){}.getType();
+        super.subjectList = stringMapListType;
         super.enrollmentClass = StringMap.class;
-        super.enrollmentList = new TypeToken<List<StringMap>>(){}.getType();
+        super.enrollmentList = stringMapListType;
         super.courseClass = StringMap.class;
-        super.courseList = new TypeToken<List<StringMap>>(){}.getType();
+        super.courseList = stringMapListType;
         super.spaceClass = StringMap.class;
-        super.spaceList = new TypeToken<List<StringMap>>(){}.getType();
+        super.spaceList = stringMapListType;
         super.statusClass = StringMap.class;
-        super.statusList = new TypeToken<List<StringMap>>(){}.getType();
+        super.statusList = stringMapListType;
         super.environmentClass = StringMap.class;
+        super.chatMessageClass = StringMap.class;
+        super.chatMessageList = stringMapListType;
+        super.chatClass = StringMap.class;
+        super.chatList = stringMapListType;
+        
     }
+
 }

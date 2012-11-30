@@ -1,20 +1,20 @@
 package br.com.developer.redu;
 
 import br.com.developer.redu.models.*;
+
 import com.google.gson.reflect.TypeToken;
 
 import java.util.List;
 
-/**
- * Created with IntelliJ IDEA.
- * User: igor
- * Date: 9/4/12
- * Time: 9:20 AM
- * To change this template use File | Settings | File Templates.
- */
 
+/**
+ * @author igor
+ * Classe que faz uma implementação concreta do Wrapper. Herda do ReduClient que fez 
+ * a implementação das requisições. Objetivo dessa classe é servir como um Factory dos modelos.
+ * Aqui são definidos os  parametros do ReduClient  e o seus respectivos tipos no initTypes.
+ */
 public class DefaultReduClient extends ReduClient<Course, Enrollment, Environment, Space, Subject,
-        User, Status> {
+        User, Status, ChatMessage, Chat> {
 
     public DefaultReduClient(String consumerKey, String consumerSecret) {
         super(consumerKey, consumerSecret);
@@ -22,7 +22,7 @@ public class DefaultReduClient extends ReduClient<Course, Enrollment, Environmen
     public DefaultReduClient(String consumerKey, String consumerSecret, String pin){
         super(consumerKey, consumerSecret, pin);
     }
-
+    
     @Override
     protected void initTypes() {
         super.userClass = User.class;
@@ -38,6 +38,9 @@ public class DefaultReduClient extends ReduClient<Course, Enrollment, Environmen
         super.statusList = new TypeToken<List<Status>>() {}.getType();
         super.statusClass = Status.class;
         super.environmentClass = Environment.class;
+        super.chatMessageClass = ChatMessage.class;
+        super.chatMessageList= new TypeToken<List<ChatMessage>>(){}.getType();
+        super.chatClass = Chat.class;
+        super.chatList = new TypeToken<List<Chat>>(){}.getType();
     }
-
 }

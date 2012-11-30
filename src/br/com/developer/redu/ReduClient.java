@@ -8,17 +8,29 @@ import br.com.developer.redu.http.ArgPair;
 import com.google.gson.Gson;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Created with IntelliJ IDEA.
- * User: igor
- * Date: 9/3/12
- * Time: 10:26 AM
- * To change this template use File | Settings | File Templates.
+ * @author igor
+ * 
+ * Classe que faz uma implementação parcial do Wrapper do redu. 
+ * Todos os objetos que representam recursos da api são parametrizados para
+ * facilitar a customização. O objetivo principal dessa classe é abstrair o parsing e
+ * a requisição dos recursos.
+ *
+ * @param <A> Tipo de Course
+ * @param <B> Tipo de Enrollment
+ * @param <C> Tipo de Environment
+ * @param <D> Tipo de Space
+ * @param <E> Tipo de Subject
+ * @param <F> Tipo de User
+ * @param <G> Tipo de Status
+ * @param <H> Tipo de ChatMessage
+ * @param <I> Tipo de Chat
  */
-public abstract class ReduClient<A,B,C,D,E,F,G> implements Redu<A,B,C,D,E,F,G> {
+public abstract class ReduClient<A,B,C,D,E,F,G, H,I> implements Redu<A,B,C,D,E,F,G,H,I> {
 
     private HttpClient httpClient;
     private final String BASE_URL="http://www.redu.com.br/api/";
@@ -30,7 +42,9 @@ public abstract class ReduClient<A,B,C,D,E,F,G> implements Redu<A,B,C,D,E,F,G> {
     protected Type spaceList;
     protected Type subjectList;
     protected Type enrollmentList;
-
+    protected Type chatMessageList;
+    protected Type chatList;
+    
     protected Class<A> courseClass;
     protected Class<B> enrollmentClass;
     protected Class<C> environmentClass;
@@ -38,6 +52,8 @@ public abstract class ReduClient<A,B,C,D,E,F,G> implements Redu<A,B,C,D,E,F,G> {
     protected Class<E> subjectClass;
     protected Class<F> userClass;
     protected Class<G> statusClass;
+    protected Class<H> chatMessageClass;
+    protected Class<I> chatClass;
 
 
     public ReduClient(String consumerKey, String consumerSecret){
@@ -57,7 +73,12 @@ public abstract class ReduClient<A,B,C,D,E,F,G> implements Redu<A,B,C,D,E,F,G> {
     public void initClient(String pin){
         this.httpClient.initClient(pin);
     }
-
+    
+    
+    /**
+     * Metódo abstrato que inicializa os tipos que representam os recursos da api.
+     * É preciso inicializar TODOS os recursos se não null pointers vão aparecer.
+     */
     protected abstract void initTypes();
 
     private <T> T getUrl(String url, Class<T> classOfT){
@@ -71,7 +92,18 @@ public abstract class ReduClient<A,B,C,D,E,F,G> implements Redu<A,B,C,D,E,F,G> {
         return retorno;
     }
     private <T> T getUrl(String url, Type typeOfT, Map.Entry<String, String>... args){
-        String json = this.httpClient.get(url, args);
+    	List<Map.Entry<String, String>> new_args = new ArrayList<Map.Entry<String, String>>();
+    	for(Map.Entry<String, String> o : args){
+    		if(o.getValue() != null){
+    			new_args.add(o);
+    		}
+    	}
+    	String json = "";
+    	if(!new_args.isEmpty()){
+    		json = this.httpClient.get(url, new_args.toArray(new ArgPair[args.length]));
+    	}else{
+    		json = this.httpClient.get(url);
+    	}
         T retorno = this.gson.fromJson(json, typeOfT);
         return retorno;
     }
@@ -83,14 +115,19 @@ public abstract class ReduClient<A,B,C,D,E,F,G> implements Redu<A,B,C,D,E,F,G> {
 
     private <T> T postUrl(String url, Class<T> classOfT, String payload, Map.Entry<String, String>... args){
         String json = this.httpClient.post(url, payload.getBytes(), args);
-        System.out.println(json);
         T retorno = this.gson.fromJson(json, classOfT);
         return retorno;
     }
-
+    
     @Override
     public A getCourse(String courseId) {
         return this.getUrl(BASE_URL+"courses/"+courseId, this.courseClass);
+    }
+    
+    @Override
+    public List<A> getCoursesByEnvironment(String environmentId){
+    	return this.getUrl(BASE_URL+"environments/"+environmentId+"/courses", 
+    			this.courseList);
     }
 
     @Override
@@ -203,10 +240,6 @@ public abstract class ReduClient<A,B,C,D,E,F,G> implements Redu<A,B,C,D,E,F,G> {
 
     @Override
     public E postSubject(String spaceId, String title, String description) {
-/*        SubjectPayload load = new SubjectPayload(title, description);
-        String url = BASE_URL+"spaces/"+spaceId+"/subjects";
-        String json = this.gson.toJson(load);
-        return this.postUrl(url, this.subjectClass,json);*/
         throw new RuntimeException("NOT SUPPORTED YET!");
     }
 
@@ -231,14 +264,10 @@ public abstract class ReduClient<A,B,C,D,E,F,G> implements Redu<A,B,C,D,E,F,G> {
     }
 
     @Override
-    public List<F> getUsersBySpace(String spaceId) {
-        return this.getUrl(BASE_URL+"spaces/"+spaceId+"/users", this.userList);
-    }
-
-    @Override
     public List<F> getUsersBySpace(String spaceId, String role) {
-        Map.Entry<String, String> arg = new ArgPair<String, String>("role", role);
-        return this.getUrl(BASE_URL+"spaces/"+spaceId+"/users", this.userList, arg);
+    	ArgPair arg = new ArgPair("role", role);
+    	return this.getUrl(BASE_URL+"spaces/"+spaceId+"/users", this.userList, arg);
+
     }
 
     @Override
@@ -260,56 +289,23 @@ public abstract class ReduClient<A,B,C,D,E,F,G> implements Redu<A,B,C,D,E,F,G> {
     }
 
     @Override
-    public List<G> getStatusByUser(String userId) {
-        return this.getUrl(BASE_URL+"users/"+userId+"/statuses",this.statusList);
-    }
-
-    @Override
-    public List<G> getStatusByUser(String userId, String type) {
-        Map.Entry<String, String> arg = new ArgPair<String, String>("type", type);
-        return this.getUrl(BASE_URL+"users/"+userId+"/statuses", this.statusList, arg);
-    }
-
-    @Override
-    public List<G> getStatusByUser(String userId, String type, int page) {
-        Map.Entry<String, String> arg = new ArgPair<String, String>("type", type);
-        Map.Entry<String, String> arg1 = new ArgPair<String, String>("page", String.valueOf(page));
+    public List<G> getStatusesByUser(String userId, String type, String page) {
+        Map.Entry<String, String> arg = new ArgPair("type", type);
+        Map.Entry<String, String> arg1 = new ArgPair("page", page);
         return this.getUrl(BASE_URL+"users/"+userId+"/statuses", this.statusList, arg, arg1);
     }
 
     @Override
-    public List<G> getStatusTimelineByUser(String userId) {
-        return this.getUrl(BASE_URL+"users/"+userId+"/statuses", this.statusList);
-    }
-
-    @Override
-    public List<G> getStatusTimelineByUser(String userId, String type) {
-        Map.Entry<String, String> arg = new ArgPair<String, String>("type", type);
-        return this.getUrl(BASE_URL+"users/"+userId+"/statuses/timeline", this.statusList, arg);
-    }
-
-    @Override
-    public List<G> getStatusTimelineByUser(String userId, String type, int page) {
-        Map.Entry<String, String> arg = new ArgPair<String, String>("type", type);
-        Map.Entry<String, String> arg1 = new ArgPair<String, String>("page", String.valueOf(page));
+    public List<G> getStatusesTimelineByUser(String userId, String type, String page) {
+        Map.Entry<String, String> arg = new ArgPair("type", type);
+        Map.Entry<String, String> arg1 = new ArgPair("page", String.valueOf(page));
         return this.getUrl(BASE_URL+"users/"+userId+"/statuses/timeline", this.statusList, arg, arg1);
     }
 
     @Override
-    public List<G> getStatusTimelineBySpace(String spaceId) {
-        return this.getUrl(BASE_URL+"spaces/"+spaceId+"/statuses", this.statusList);
-    }
-
-    @Override
-    public List<G> getStatusTimelineBySpace(String spaceId, String type) {
-        Map.Entry<String, String> arg = new ArgPair<String, String>("type", type);
-        return this.getUrl(BASE_URL+"spaces/"+spaceId+"/statuses/timeline", this.statusList, arg);
-    }
-
-    @Override
-    public List<G> getStatusTimelineBySpace(String spaceId, String type, int page) {
-        Map.Entry<String, String> arg = new ArgPair<String, String>("status[type]", type);
-        Map.Entry<String, String> arg1 = new ArgPair<String, String>("page", type);
+    public List<G> getStatusesTimelineBySpace(String spaceId, String type, String page) {
+        Map.Entry<String, String> arg = new ArgPair("type", type);
+        Map.Entry<String, String> arg1 = new ArgPair("page", type);
         return this.getUrl(BASE_URL+"spaces/"+spaceId+"/statuses/timeline", this.statusList, arg, arg1);
     }
 
@@ -322,20 +318,9 @@ public abstract class ReduClient<A,B,C,D,E,F,G> implements Redu<A,B,C,D,E,F,G> {
     }
 
     @Override
-    public List<G> getStatusBySpace(String spaceId) {
-        return this.getUrl(BASE_URL+"spaces/"+spaceId+"/statuses", this.statusList);
-    }
-
-    @Override
-    public List<G> getStatusBySpace(String spaceId, String type) {
-        Map.Entry<String, String> arg = new ArgPair<String, String>("type", type);
-        return this.getUrl(BASE_URL+"spaces/"+spaceId+"/statuses/", this.statusList, arg);
-    }
-
-    @Override
-    public List<G> getStatusBySpace(String spaceId, String type, int page) {
-        Map.Entry<String, String> arg = new ArgPair<String, String>("status[type]", type);
-        Map.Entry<String, String> arg1 = new ArgPair<String, String>("page", type);
+    public List<G> getStatusesBySpace(String spaceId, String type, String page) {
+        Map.Entry<String, String> arg = new ArgPair("type", type);
+        Map.Entry<String, String> arg1 = new ArgPair("page", type);
         return this.getUrl(BASE_URL+"spaces/"+spaceId+"/statuses", this.statusList, arg, arg1);
     }
 
@@ -348,7 +333,7 @@ public abstract class ReduClient<A,B,C,D,E,F,G> implements Redu<A,B,C,D,E,F,G> {
     }
 
     @Override
-    public List<G> getStatusByLecture(String lectureId) {
+    public List<G> getStatusesByLecture(String lectureId) {
         return this.getUrl(BASE_URL+"lectures/"+lectureId+"/statuses", this.statusList);
     }
 
@@ -364,4 +349,26 @@ public abstract class ReduClient<A,B,C,D,E,F,G> implements Redu<A,B,C,D,E,F,G> {
     public void deleteStatus(String statusId) {
         this.httpClient.delete(BASE_URL+"statuses/"+statusId);
     }
+    
+    @Override 
+    public H getChatMessage(String chatMessageId){
+    	return this.getUrl(BASE_URL+"chat_messages/"+chatMessageId, this.chatMessageClass);
+    }
+    
+    @Override
+    public List<H> getChatMessagesByChat(String chatId){
+    	return this.getUrl(BASE_URL+"chats/"+chatId+"/chat_messages", 
+    			this.chatMessageList);
+    }
+    
+    @Override
+    public I getChat(String chatId){
+    	return this.getUrl(BASE_URL+"chats/"+chatId, this.chatClass);
+    }
+    
+    @Override
+    public List<I> getChatsByUser(String userId){
+    	return this.getUrl(BASE_URL+"users/"+userId+"/chats",this.chatList);
+    }
+    
 }

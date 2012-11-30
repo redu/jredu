@@ -29,7 +29,7 @@ System.out.println(redu.getMe());
 
 *Obs:
 
-Só é preciso pedir o pin uma vez, depois de adquirido basta iniciar o client dessa maneira:
+Só é preciso pedir o pin uma vez por usuário, depois de adquirido basta iniciar o client dessa maneira:
 
 ```java
 DefaultReduClient redu = new DefaultReduClient("yourconsumerkey", "yoursecretkey", "yourpin");
