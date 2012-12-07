@@ -42,6 +42,10 @@ DefaultReduClient redu = new DefaultReduClient("yourconsumerkey", "yoursecretkey
 3. Dê commit nas mudanças
 4. Mande um pull request
 
+<img src="https://github.com/downloads/redu/redupy/redutech-marca.png" alt="Redu Educational Technologies" width="300">
+
+Este projeto é financiado e mantido pelo [Redu Educational Techologies](http://tech.redu.com.br).
+
 ## Copyright
 
 Copyright (c) 2012 Redu Educational Technologies
